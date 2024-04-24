@@ -91,6 +91,8 @@ private slots:
 
     void onSerialPortReadyRead();
     void onSerialPortError(QSerialPort::SerialPortError);
+    void onPanelSerialPortReadyRead();
+    void onPanelSerialPortError(QSerialPort::SerialPortError);
     void onTimerConnection();
     void onTimerStateQuery();
     void onVisualizatorRotationChanged();
@@ -232,6 +234,8 @@ private:
     bool m_settingsLoading;
 
     QSerialPort m_serialPort;
+    QSerialPort m_panelSerialPort;
+    QVector3D m_panelJogVec;
 
     frmSettings *m_settings;
     frmAbout m_frmAbout;

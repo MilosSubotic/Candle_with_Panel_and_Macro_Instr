@@ -32,8 +32,15 @@
 #include <QAction>
 #include <QLayout>
 #include <QMimeData>
+#include <QThread>
 #include "frmmain.h"
 #include "ui_frmmain.h"
+
+#define DEBUG(var) \
+	do{ \
+		qDebug() << #var << " = " << var; \
+	}while(0)
+
 
 frmMain::frmMain(QWidget *parent) :
     QMainWindow(parent),
@@ -254,19 +261,97 @@ frmMain::frmMain(QWidget *parent) :
             ui->grpSpindle->setTitle(tr("Spindle") + QString(tr(" (%1)")).arg(ui->slbSpindle->value()));
     });
 
+
+	//TODO Two for loops instead of this list.
+	const char* ports[] = {"/dev/ttyUSB0", "/dev/ttyUSB1", "/dev/ttyACM0", "/dev/ttyACM1", "/dev/ttyACM2", "/dev/ttyUSB2"};
+	QString grblPort;
+	QString panelPort;
+	DEBUG(m_settings->baud());
+	const int baud = 115200;
+	for(auto port : ports) {
+		DEBUG(port);
+		QSerialPort s;
+		s.setParity(QSerialPort::NoParity);
+		s.setDataBits(QSerialPort::Data8);
+		s.setFlowControl(QSerialPort::NoFlowControl);
+		s.setStopBits(QSerialPort::OneStop);
+		s.setBaudRate(baud);
+		s.setPortName(port);
+
+		if(!s.open(QIODevice::ReadWrite)){
+			continue;
+		}
+		if(!s.isOpen()){
+			continue;
+		}
+
+
+		if(!s.isDataTerminalReady()){
+			s.setDataTerminalReady(1);
+			QThread::msleep(10);
+		}
+		s.setDataTerminalReady(0);
+		QThread::msleep(10);
+		s.setDataTerminalReady(1);
+
+		if(!s.waitForReadyRead(2000)){
+			continue;
+		}
+		for(int i = 0; i < 2; i++){
+			if(!s.canReadLine()){
+				break;
+			}
+
+			QString line = s.readLine().trimmed();
+			DEBUG(line);
+			if(line == "Grbl 1.1f ['$' for help]") {
+				grblPort = port;
+				DEBUG(grblPort);
+				break;
+			}else if(line == "Candle Panel"){
+				panelPort = port;
+				DEBUG(panelPort);
+				break;
+			}
+		}
+
+
+	}
+	DEBUG(grblPort);
+	DEBUG(panelPort);
+
+
     // Setup serial port
     m_serialPort.setParity(QSerialPort::NoParity);
     m_serialPort.setDataBits(QSerialPort::Data8);
     m_serialPort.setFlowControl(QSerialPort::NoFlowControl);
     m_serialPort.setStopBits(QSerialPort::OneStop);
-
+#if 0
     if (m_settings->port() != "") {
         m_serialPort.setPortName(m_settings->port());
         m_serialPort.setBaudRate(m_settings->baud());
     }
+#else
+    if (grblPort != "") {
+        m_serialPort.setPortName(grblPort);
+        m_serialPort.setBaudRate(baud);
+    }
+#endif
 
     connect(&m_serialPort, SIGNAL(readyRead()), this, SLOT(onSerialPortReadyRead()), Qt::QueuedConnection);
     connect(&m_serialPort, SIGNAL(error(QSerialPort::SerialPortError)), this, SLOT(onSerialPortError(QSerialPort::SerialPortError)));
+
+	m_panelSerialPort.setParity(QSerialPort::NoParity);
+	m_panelSerialPort.setDataBits(QSerialPort::Data8);
+	m_panelSerialPort.setFlowControl(QSerialPort::NoFlowControl);
+	m_panelSerialPort.setStopBits(QSerialPort::OneStop);
+	if (panelPort != "") {
+		m_panelSerialPort.setPortName(panelPort);
+		m_panelSerialPort.setBaudRate(baud);
+	}
+
+    connect(&m_panelSerialPort, SIGNAL(readyRead()), this, SLOT(onPanelSerialPortReadyRead()), Qt::QueuedConnection);
+    connect(&m_panelSerialPort, SIGNAL(error(QSerialPort::SerialPortError)), this, SLOT(onPanelSerialPortError(QSerialPort::SerialPortError)));
 
     this->installEventFilter(this);
     ui->tblProgram->installEventFilter(this);
@@ -1375,6 +1460,81 @@ void frmMain::onSerialPortError(QSerialPort::SerialPortError error)
         ui->txtConsole->appendPlainText(tr("Serial port error ") + QString::number(error) + ": " + m_serialPort.errorString());
         if (m_serialPort.isOpen()) {
             m_serialPort.close();
+            updateControlsState();
+        }
+    }
+}
+
+void frmMain::onPanelSerialPortReadyRead()
+{
+    DEBUG(m_panelSerialPort.canReadLine());
+    QString panelCmd = m_panelSerialPort.readLine().trimmed();
+    DEBUG(panelCmd);
+    if(panelCmd == "JOG.X+=1") {
+        m_panelJogVec.setX(1);
+    } else if(panelCmd == "JOG.X+=0") {
+        m_panelJogVec.setX(0);
+    } else if(panelCmd == "JOG.X-=1") {
+        m_panelJogVec.setX(-1);
+    } else if(panelCmd == "JOG.X-=0") {
+        m_panelJogVec.setX(0);
+    } else if(panelCmd == "JOG.Y+=1") {
+        m_panelJogVec.setY(1);
+    } else if(panelCmd == "JOG.Y+=0") {
+        m_panelJogVec.setY(0);
+    } else if(panelCmd == "JOG.Y-=1") {
+        m_panelJogVec.setY(-1);
+    } else if(panelCmd == "JOG.Y-=0") {
+        m_panelJogVec.setY(0);
+    } else if(panelCmd == "JOG.Z+=1") {
+        m_panelJogVec.setZ(1);
+    } else if(panelCmd == "JOG.Z+=0") {
+        m_panelJogVec.setZ(0);
+    } else if(panelCmd == "JOG.Z-=1") {
+        m_panelJogVec.setZ(-1);
+    } else if(panelCmd == "JOG.Z-=0") {
+        m_panelJogVec.setZ(0);
+    } else if(panelCmd == "PB.RD0") {
+        //TODO
+    } else if(panelCmd == "PB.GN0") {
+        //TODO
+    } else if(panelCmd == "PB.BL0") {
+        //TODO
+    } else if(panelCmd == "PB.YL0") {
+        //TODO
+    } else if(panelCmd == "PB.GR0") {
+        //TODO
+    } else if(panelCmd == "PB.BK0") {
+        //TODO
+    } else if(panelCmd == "PB.RD1") {
+        //TODO
+    } else if(panelCmd == "PB.GN1") {
+        //TODO
+    } else if(panelCmd == "PB.BL1") {
+        //TODO
+    } else if(panelCmd == "PB.YL1") {
+        //TODO
+    } else if(panelCmd == "PB.GR1") {
+        //TODO
+    } else if(panelCmd == "PB.BK1") {
+        //TODO
+    }
+    // Scale FIXME Why?
+    m_panelJogVec /= 2;
+    DEBUG(m_panelJogVec);
+    m_jogVector = m_panelJogVec;
+    jogStep();
+}
+
+void frmMain::onPanelSerialPortError(QSerialPort::SerialPortError error)
+{
+    static QSerialPort::SerialPortError previousError;
+
+    if (error != QSerialPort::NoError && error != previousError) {
+        previousError = error;
+        ui->txtConsole->appendPlainText(tr("Panel serial port error ") + QString::number(error) + ": " + m_panelSerialPort.errorString());
+        if (m_panelSerialPort.isOpen()) {
+            m_panelSerialPort.close();
             updateControlsState();
         }
     }
