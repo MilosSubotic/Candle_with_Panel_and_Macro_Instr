@@ -1506,8 +1506,9 @@ void frmMain::onPanelSerialPortReadyRead()
         //TODO
     } else if(panelCmd == "PB.GN0") {
         //TODO
-    } else if(panelCmd == "PB.BL0") {
-        //TODO
+    } else if(panelCmd == "PB.BL0=1") {
+        // Turn off/on spindle.
+        on_cmdSpindle_clicked(!ui->cmdSpindle->isChecked());
     } else if(panelCmd == "PB.YL0") {
         //TODO
     } else if(panelCmd == "PB.GR0") {
