@@ -262,8 +262,10 @@ frmMain::frmMain(QWidget *parent) :
     });
 
 
+    //TODO To white spaces ident.
 	//TODO Two for loops instead of this list.
-	const char* ports[] = {"/dev/ttyUSB0", "/dev/ttyUSB1", "/dev/ttyACM0", "/dev/ttyACM1", "/dev/ttyACM2", "/dev/ttyUSB2"};
+	const char* ports[] = {"/dev/ttyUSB0", "/dev/ttyUSB1", };
+    // "/dev/ttyUSB2", "/dev/ttyACM0", "/dev/ttyACM1", "/dev/ttyACM2"
 	QString grblPort;
 	QString panelPort;
 	DEBUG(m_settings->baud());
@@ -285,7 +287,9 @@ frmMain::frmMain(QWidget *parent) :
 			continue;
 		}
 
-
+        // FIXME This reset does not work robustly.
+        // GRBL board does not want to be reseted if 12V power is not on.
+        // Need to reset it first with Arduino IDE, next time want to be reseted.
 		if(!s.isDataTerminalReady()){
 			s.setDataTerminalReady(1);
 			QThread::msleep(10);
@@ -818,6 +822,10 @@ void frmMain::openPort()
         ui->txtStatus->setStyleSheet(QString("background-color: palette(button); color: palette(text);"));
 //        updateControlsState();
         grblReset();
+    }
+	if (m_panelSerialPort.open(QIODevice::ReadWrite)) {
+        ui->txtStatus->setText(tr("Panel port opened"));
+        ui->txtStatus->setStyleSheet(QString("background-color: palette(button); color: palette(text);"));
     }
 }
 
@@ -1467,9 +1475,9 @@ void frmMain::onSerialPortError(QSerialPort::SerialPortError error)
 
 void frmMain::onPanelSerialPortReadyRead()
 {
-    DEBUG(m_panelSerialPort.canReadLine());
+    //DEBUG(m_panelSerialPort.canReadLine());
     QString panelCmd = m_panelSerialPort.readLine().trimmed();
-    DEBUG(panelCmd);
+    //DEBUG(panelCmd);
     if(panelCmd == "JOG.X+=1") {
         m_panelJogVec.setX(1);
     } else if(panelCmd == "JOG.X+=0") {
@@ -1519,9 +1527,7 @@ void frmMain::onPanelSerialPortReadyRead()
     } else if(panelCmd == "PB.BK1") {
         //TODO
     }
-    // Scale FIXME Why?
-    m_panelJogVec /= 2;
-    DEBUG(m_panelJogVec);
+    //DEBUG(m_panelJogVec);
     m_jogVector = m_panelJogVec;
     jogStep();
 }
