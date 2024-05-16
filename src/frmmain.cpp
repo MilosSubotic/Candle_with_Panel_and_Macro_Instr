@@ -262,64 +262,62 @@ frmMain::frmMain(QWidget *parent) :
     });
 
 
-    //TODO Two for loops instead of this list.
-    const char* ports[] = {"/dev/ttyUSB0", "/dev/ttyUSB1", };
-    // "/dev/ttyUSB2", "/dev/ttyACM0", "/dev/ttyACM1", "/dev/ttyACM2"
     
     QString grblPort;
     QString panelPort;
-    DEBUG(m_settings->baud());
+    DEBUG(m_settings->baud()); //TODO If this not set then 115200.
     const int baud = 115200;
-    for(auto port : ports) {
-        DEBUG(port);
-        QSerialPort s;
-        s.setParity(QSerialPort::NoParity);
-        s.setDataBits(QSerialPort::Data8);
-        s.setFlowControl(QSerialPort::NoFlowControl);
-        s.setStopBits(QSerialPort::OneStop);
-        s.setBaudRate(baud);
-        s.setPortName(port);
+    for(auto dev_name : {"USB", "ACM"}){
+        for(int i = 0; i < 3; i++){
+            QString port = QString("/dev/tty%1%2").arg(dev_name).arg(i);
+            DEBUG(port);
+            QSerialPort s;
+            s.setParity(QSerialPort::NoParity);
+            s.setDataBits(QSerialPort::Data8);
+            s.setFlowControl(QSerialPort::NoFlowControl);
+            s.setStopBits(QSerialPort::OneStop);
+            s.setBaudRate(baud);
+            s.setPortName(port);
 
-        if(!s.open(QIODevice::ReadWrite)){
-            continue;
-        }
-        if(!s.isOpen()){
-            continue;
-        }
+            if(!s.open(QIODevice::ReadWrite)){
+                continue;
+            }
+            if(!s.isOpen()){
+                continue;
+            }
 
-        // FIXME This reset does not work robustly.
-        // GRBL board does not want to be reseted if 12V power is not on.
-        // Need to reset it first with Arduino IDE, next time want to be reseted.
-        if(!s.isDataTerminalReady()){
-            s.setDataTerminalReady(1);
+            // FIXME This reset does not work robustly.
+            // GRBL board does not want to be reseted if 12V power is not on.
+            // Need to reset it first with Arduino IDE, next time want to be reseted.
+            if(!s.isDataTerminalReady()){
+                s.setDataTerminalReady(1);
+                QThread::msleep(10);
+            }
+            s.setDataTerminalReady(0);
             QThread::msleep(10);
-        }
-        s.setDataTerminalReady(0);
-        QThread::msleep(10);
-        s.setDataTerminalReady(1);
+            s.setDataTerminalReady(1);
 
-        if(!s.waitForReadyRead(2000)){
-            continue;
-        }
-        for(int i = 0; i < 2; i++){
-            if(!s.canReadLine()){
-                break;
+            if(!s.waitForReadyRead(2000)){
+                continue;
             }
+            for(int i = 0; i < 2; i++){
+                if(!s.canReadLine()){
+                    break;
+                }
 
-            QString line = s.readLine().trimmed();
-            DEBUG(line);
-            if(line == "Grbl 1.1f ['$' for help]") {
-                grblPort = port;
-                DEBUG(grblPort);
-                break;
-            }else if(line == "Candle Panel"){
-                panelPort = port;
-                DEBUG(panelPort);
-                break;
+                QString line = s.readLine().trimmed();
+                DEBUG(line);
+                if(line == "Grbl 1.1f ['$' for help]") {
+                    grblPort = port;
+                    DEBUG(grblPort);
+                    break;
+                }else if(line == "Candle Panel"){
+                    panelPort = port;
+                    DEBUG(panelPort);
+                    break;
+                }
             }
         }
-
-
     }
     DEBUG(grblPort);
     DEBUG(panelPort);
