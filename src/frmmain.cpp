@@ -33,6 +33,7 @@
 #include <QLayout>
 #include <QMimeData>
 #include <QThread>
+#include <QStandardPaths>
 #include "frmmain.h"
 #include "ui_frmmain.h"
 #include "utils/util.h"
@@ -87,8 +88,10 @@ frmMain::frmMain(QWidget *parent) :
                        << "black";
 
     // Loading settings
-    m_settingsFileName = qApp->applicationDirPath() + "/settings.ini";
-    DEBUG(m_settingsFileName);
+    QString cfgDir = QStandardPaths::standardLocations(
+        QStandardPaths::AppConfigLocation
+    ).first();
+    m_settingsFileName = cfgDir + "/settings.ini";
     preloadSettings();
 
     m_settings = new frmSettings(this);

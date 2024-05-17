@@ -41,6 +41,7 @@ public:
     QStringList preprocessCommands(QStringList commands);
     QStringList preprocessCommand(QString command);
     QList<QStringList> preprocessCommand2(const QStringList &args);
+    QList<QStringList> getMacroInstrProgram(float code);
     QStringList convertArcsToLines(QString command);
     QList<PointSegment *> getPointSegmentList();
     double getTraverseSpeed() const;

@@ -7,6 +7,9 @@
 
 #include <QListIterator>
 #include <QDebug>
+#include <QStandardPaths>
+#include <QFile>
+#include <QTextStream>
 #include "gcodeparser.h"
 #include "utils/util.h"
 
@@ -454,24 +457,52 @@ QList<QStringList> GcodeParser::preprocessCommand2(const QStringList &args) {
     // handle G codes.
     QList<float> gCodes = GcodePreprocessorUtils::parseCodes(args, 'G');
 
-    DEBUG(args);
     if (gCodes.size() == 1){
         float code = gCodes.first();
-        DEBUG(code);
         if (code == 120.0f) {
             //TODO
+            QList<QStringList> programLines = getMacroInstrProgram(code);
+            DEBUG(programLines);
+            //TODO Parse args as in GcodePreprocessorUtils.
+            //TODO Replace args in programLines.
+
+            //TODO debug test.
             QStringList args2;
             args2.append("G0");
             args2.append("X20");
             args2.append("Y20");
             argsList.append(args2);
+             DEBUG(argsList);
         } else {
             argsList.append(args);
         }
     } else {
         argsList.append(args);
     }
-    DEBUG(argsList);
 
     return argsList;
+}
+
+QList<QStringList> GcodeParser::getMacroInstrProgram(float code) {
+    //TODO Caching.
+    QString programName = QString("macro_instrs/ProgramG%1.gc").arg(int(code));
+    QString programFileName = QStandardPaths::locate(
+        QStandardPaths::AppConfigLocation,
+        programName
+    );
+    QList<QStringList> programLines;
+    if (programFileName != "") {
+            QFile file(programFileName);
+            if (file.open(QIODevice::ReadOnly)) {
+                QTextStream textStream(&file);
+                // Read lines
+                while (!textStream.atEnd()) {
+                    QString command = textStream.readLine();
+                    QString stripped = GcodePreprocessorUtils::removeComment(command);
+                    QStringList args = GcodePreprocessorUtils::splitCommand(stripped);
+                    programLines.append(args);
+                }
+            }
+    }
+    return programLines;
 }
