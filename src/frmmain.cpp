@@ -265,7 +265,6 @@ frmMain::frmMain(QWidget *parent) :
     
     QString grblPort;
     QString panelPort;
-    DEBUG(m_settings->baud()); //TODO If this not set then 115200.
     const int baud = 115200;
     for(auto dev_name : {"USB", "ACM"}){
         for(int i = 0; i < 3; i++){
