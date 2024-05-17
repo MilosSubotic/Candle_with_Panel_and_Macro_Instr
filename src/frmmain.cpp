@@ -35,12 +35,7 @@
 #include <QThread>
 #include "frmmain.h"
 #include "ui_frmmain.h"
-
-#define DEBUG(var) \
-    do{ \
-        qDebug() << #var << " = " << var; \
-    }while(0)
-
+#include "utils/util.h"
 
 frmMain::frmMain(QWidget *parent) :
     QMainWindow(parent),
@@ -93,6 +88,7 @@ frmMain::frmMain(QWidget *parent) :
 
     // Loading settings
     m_settingsFileName = qApp->applicationDirPath() + "/settings.ini";
+    DEBUG(m_settingsFileName);
     preloadSettings();
 
     m_settings = new frmSettings(this);

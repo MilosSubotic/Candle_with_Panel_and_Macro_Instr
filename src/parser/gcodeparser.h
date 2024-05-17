@@ -40,6 +40,7 @@ public:
     QList<PointSegment *> expandArc();
     QStringList preprocessCommands(QStringList commands);
     QStringList preprocessCommand(QString command);
+    QList<QStringList> preprocessCommand2(const QStringList &args);
     QStringList convertArcsToLines(QString command);
     QList<PointSegment *> getPointSegmentList();
     double getTraverseSpeed() const;

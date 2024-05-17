@@ -11,6 +11,7 @@
 #include <QVector3D>
 #include <QEventLoop>
 #include <QTimer>
+#include <QDebug>
 
 class Util
 {
@@ -57,6 +58,12 @@ public:
         button->setIcon(invertIconColors(button->icon()));
     }
 };
+
+#define DEBUG(var) \
+    do{ \
+        qDebug() << #var << " = " << var; \
+    }while(0)
+
 
 #endif // UTIL
 

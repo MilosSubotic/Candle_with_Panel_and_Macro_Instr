@@ -8,6 +8,7 @@
 #include <QListIterator>
 #include <QDebug>
 #include "gcodeparser.h"
+#include "utils/util.h"
 
 GcodeParser::GcodeParser(QObject *parent) : QObject(parent)
 {
@@ -116,7 +117,14 @@ PointSegment* GcodeParser::addCommand(const QStringList &args)
     if (args.isEmpty()) {
         return NULL;
     }
-    return processCommand(args);
+    //return processCommand(args);
+    
+    PointSegment *ps = NULL;
+    QList<QStringList> argsList = preprocessCommand2(args);
+    foreach (const QStringList& args2, argsList) {
+        ps = processCommand(args2);
+    }
+    return ps;
 }
 
 /**
@@ -438,4 +446,32 @@ QStringList GcodeParser::convertArcsToLines(QString command) {
 
     return result;
 
+}
+
+QList<QStringList> GcodeParser::preprocessCommand2(const QStringList &args) {
+    QList<QStringList> argsList;
+
+    // handle G codes.
+    QList<float> gCodes = GcodePreprocessorUtils::parseCodes(args, 'G');
+
+    DEBUG(args);
+    if (gCodes.size() == 1){
+        float code = gCodes.first();
+        DEBUG(code);
+        if (code == 120.0f) {
+            //TODO
+            QStringList args2;
+            args2.append("G0");
+            args2.append("X20");
+            args2.append("Y20");
+            argsList.append(args2);
+        } else {
+            argsList.append(args);
+        }
+    } else {
+        argsList.append(args);
+    }
+    DEBUG(argsList);
+
+    return argsList;
 }
