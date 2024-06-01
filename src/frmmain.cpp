@@ -1499,9 +1499,11 @@ void frmMain::onPanelSerialPortReadyRead()
     } else if(panelCmd == "JOG.Z-=0") {
         m_panelJogVec.setZ(0);
     } else if(panelCmd == "PB.RD0") {
-        //TODO
+        // Stop.
+        on_cmdStop_clicked(); //TODO test.
     } else if(panelCmd == "PB.GN0") {
         //TODO
+        // Run
     } else if(panelCmd == "PB.BL0=1") {
         // Turn off/on spindle.
         on_cmdSpindle_clicked(!ui->cmdSpindle->isChecked());
@@ -1523,7 +1525,36 @@ void frmMain::onPanelSerialPortReadyRead()
         //TODO
     } else if(panelCmd == "PB.BK1") {
         //TODO
+    } else if(panelCmd.startsWith("ROT")){
+        QStringList sl = panelCmd.split(u'=');
+        QString rot_sw = sl[0];
+        int pos = sl[1].toInt();
+        DEBUG(rot_sw);
+        DEBUG(pos);
+        if(rot_sw == "ROT0"){
+            static const int posToS[13] = {
+                0, // 0 - NA
+                0, // 1 - Stop
+                1, // 2 - 1, lowest
+                10,
+                20,
+                50,
+                100,
+                300,
+                400,
+                500,
+                600,
+                800,
+                1000 // 12 - Highest
+            };
+            int S = posToS[pos];
+            ui->slbSpindle->setValue(S);
+            ui->cmdSpindle->setChecked(S != 0);
+            on_cmdSpindle_clicked(ui->cmdSpindle->isChecked());
+        }
     }
+
+
     //DEBUG(m_panelJogVec);
     m_jogVector = m_panelJogVec;
     jogStep();
@@ -2992,7 +3023,7 @@ bool frmMain::eventFilter(QObject *obj, QEvent *event)
                 } else if (keyEvent->key() == Qt::Key_5) {
                     on_cmdStop_clicked();
                 } else if (keyEvent->key() == Qt::Key_0) {
-                    on_cmdSpindle_clicked(!ui->cmdSpindle->isChecked());
+                    on_cmdSpindle_clicked(!ui->cmdSpindle->isChecked()); // Toggle spindle.
                 } else if (keyEvent->key() == Qt::Key_Asterisk) {
                     ui->slbSpindle->setSliderPosition(ui->slbSpindle->sliderPosition() + 1);
                 } else if (keyEvent->key() == Qt::Key_Slash) {

@@ -63,7 +63,10 @@ public:
     do{ \
         qDebug() << #var << " = " << var; \
     }while(0)
-
+#define TRACE() \
+    do{ \
+        qDebug() << __PRETTY_FUNCTION__; \
+    }while(0)
 
 #endif // UTIL
 
