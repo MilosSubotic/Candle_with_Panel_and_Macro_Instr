@@ -1529,9 +1529,10 @@ void frmMain::onPanelSerialPortReadyRead()
         QStringList sl = panelCmd.split(u'=');
         QString rot_sw = sl[0];
         int pos = sl[1].toInt();
-        DEBUG(rot_sw);
-        DEBUG(pos);
+        //DEBUG(rot_sw);
+        //DEBUG(pos);
         if(rot_sw == "ROT0"){
+            // Spindle.
             static const int posToS[13] = {
                 0, // 0 - NA
                 0, // 1 - Stop
@@ -1551,6 +1552,22 @@ void frmMain::onPanelSerialPortReadyRead()
             ui->slbSpindle->setValue(S);
             ui->cmdSpindle->setChecked(S != 0);
             on_cmdSpindle_clicked(ui->cmdSpindle->isChecked());
+        } else if(rot_sw == "ROT1"){
+            // Step.
+            int idx = pos-1;
+            int lastIdx = ui->cboJogStep->count()-1;
+            if(idx > lastIdx){
+                idx = lastIdx;
+            }
+            ui->cboJogStep->setCurrentIndex(idx);
+        } else if(rot_sw == "ROT2"){
+            // Feed.
+            int idx = pos-1;
+            int lastIdx = ui->cboJogFeed->count()-1;
+            if(idx > lastIdx){
+                idx = lastIdx;
+            }
+            ui->cboJogFeed->setCurrentIndex(idx);
         }
     }
 
