@@ -328,6 +328,7 @@ private:
 
     void loadFile(QString fileName);
     void loadFile(QList<QString> data);
+    void loadRecent(QString fileName);
     void clearTable();
     void preloadSettings();
     void loadSettings();

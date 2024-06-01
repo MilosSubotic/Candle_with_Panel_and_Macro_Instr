@@ -1498,32 +1498,42 @@ void frmMain::onPanelSerialPortReadyRead()
         m_panelJogVec.setZ(-1);
     } else if(panelCmd == "JOG.Z-=0") {
         m_panelJogVec.setZ(0);
-    } else if(panelCmd == "PB.RD0") {
-        // Stop.
-        on_cmdStop_clicked(); //TODO test.
-    } else if(panelCmd == "PB.GN0") {
-        //TODO
-        // Run
+    } else if(panelCmd == "PB.RD0=1") {
+        // Abort.
+        on_cmdFileAbort_clicked();
+    } else if(panelCmd == "PB.GN0=1") {
+        // Run aka Send
+        on_cmdFileSend_clicked();
     } else if(panelCmd == "PB.BL0=1") {
+        // Reload
+        if(!m_recentFiles.isEmpty()){
+            QString fileName = m_recentFiles.constLast();
+            qInfo() << "Reloading: " << fileName;
+            loadRecent(fileName);
+        }
+    } else if(panelCmd == "PB.YL0=1") {
+        // Pause
+        ui->cmdFilePause->setChecked(!ui->cmdFilePause->isChecked());
+        on_cmdFilePause_clicked(ui->cmdFilePause->isChecked());
+    } else if(panelCmd == "PB.GR0=1") {
         // Turn off/on spindle.
         on_cmdSpindle_clicked(!ui->cmdSpindle->isChecked());
-    } else if(panelCmd == "PB.YL0") {
+    } else if(panelCmd == "PB.BK0=1") {
+        // Go to 0
+        sendCommand("G0X0Y0Z0", -1, m_settings->showUICommands());
+    } else if(panelCmd == "PB.RD1=1") {
+        // Stop.
+        //TODO Does nothing? Is that just for Jog
+        on_cmdStop_clicked();
+    } else if(panelCmd == "PB.GN1=1") {
         //TODO
-    } else if(panelCmd == "PB.GR0") {
+    } else if(panelCmd == "PB.BL1=1") {
         //TODO
-    } else if(panelCmd == "PB.BK0") {
+    } else if(panelCmd == "PB.YL1=1") {
         //TODO
-    } else if(panelCmd == "PB.RD1") {
+    } else if(panelCmd == "PB.GR1=1") {
         //TODO
-    } else if(panelCmd == "PB.GN1") {
-        //TODO
-    } else if(panelCmd == "PB.BL1") {
-        //TODO
-    } else if(panelCmd == "PB.YL1") {
-        //TODO
-    } else if(panelCmd == "PB.GR1") {
-        //TODO
-    } else if(panelCmd == "PB.BK1") {
+    } else if(panelCmd == "PB.BK1=1") {
         //TODO
     } else if(panelCmd.startsWith("ROT")){
         QStringList sl = panelCmd.split(u'=');
@@ -1998,6 +2008,12 @@ void frmMain::loadFile(QString fileName)
 
     // Load lines
     loadFile(data);
+}
+
+void frmMain::loadRecent(QString fileName)
+{
+    if (!saveChanges(m_heightMapMode)) return;
+    if (!m_heightMapMode) loadFile(fileName); else loadHeightMap(fileName);
 }
 
 QTime frmMain::updateProgramEstimatedTime(QList<LineSegment*> lines)
@@ -3230,11 +3246,11 @@ void frmMain::addRecentHeightmap(QString fileName)
 void frmMain::onActRecentFileTriggered()
 {
     QAction *action = static_cast<QAction*>(sender());
-    QString fileName = action->text();
 
     if (action != NULL) {
-        if (!saveChanges(m_heightMapMode)) return;
-        if (!m_heightMapMode) loadFile(fileName); else loadHeightMap(fileName);
+        QString fileName = action->text();
+
+        loadRecent(fileName);
     }
 }
 
