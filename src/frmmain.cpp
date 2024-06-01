@@ -1520,7 +1520,7 @@ void frmMain::onPanelSerialPortReadyRead()
         on_cmdSpindle_clicked(!ui->cmdSpindle->isChecked());
     } else if(panelCmd == "PB.BK0=1") {
         // Go to 0
-        sendCommand("G0X0Y0Z0", -1, m_settings->showUICommands());
+        sendCommand("G90G0X0Y0Z0", -1, m_settings->showUICommands());
     } else if(panelCmd == "PB.RD1=1") {
         // Stop.
         //TODO Does nothing? Is that just for Jog
@@ -1532,9 +1532,11 @@ void frmMain::onPanelSerialPortReadyRead()
     } else if(panelCmd == "PB.YL1=1") {
         //TODO
     } else if(panelCmd == "PB.GR1=1") {
-        //TODO
+        // XY zero.
+        on_cmdZeroXY_clicked();
     } else if(panelCmd == "PB.BK1=1") {
-        //TODO
+        // Z zero.
+        on_cmdZeroZ_clicked();
     } else if(panelCmd.startsWith("ROT")){
         QStringList sl = panelCmd.split(u'=');
         QString rot_sw = sl[0];
