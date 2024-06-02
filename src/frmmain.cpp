@@ -1508,7 +1508,6 @@ void frmMain::onPanelSerialPortReadyRead()
         // Reload
         if(!m_recentFiles.isEmpty()){
             QString fileName = m_recentFiles.constLast();
-            addRecentFile(m_recentFiles); //TODO Test.
             qInfo() << "Reloading: " << fileName;
             loadRecent(fileName);
         }
@@ -2015,6 +2014,8 @@ void frmMain::loadFile(QString fileName)
 
 void frmMain::loadRecent(QString fileName)
 {
+    addRecentFile(fileName);
+    updateRecentFilesMenu();
     if (!saveChanges(m_heightMapMode)) return;
     if (!m_heightMapMode) loadFile(fileName); else loadHeightMap(fileName);
 }
@@ -3252,7 +3253,6 @@ void frmMain::onActRecentFileTriggered()
 
     if (action != NULL) {
         QString fileName = action->text();
-
         loadRecent(fileName);
     }
 }
