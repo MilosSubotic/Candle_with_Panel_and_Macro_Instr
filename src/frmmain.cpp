@@ -1508,6 +1508,7 @@ void frmMain::onPanelSerialPortReadyRead()
         // Reload
         if(!m_recentFiles.isEmpty()){
             QString fileName = m_recentFiles.constLast();
+            addRecentFile(m_recentFiles); //TODO Test.
             qInfo() << "Reloading: " << fileName;
             loadRecent(fileName);
         }
