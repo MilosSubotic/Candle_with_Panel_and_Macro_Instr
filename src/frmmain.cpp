@@ -265,10 +265,23 @@ frmMain::frmMain(QWidget *parent) :
     QString grblPort;
     QString panelPort;
     const int baud = 115200;
-    for(auto dev_name : {"USB", "ACM"}){
-        for(int i = 0; i < 3; i++){
+
+    // Find which files exist.
+    QList<QString> existing_ports;
+    //for(auto dev_name : {"USB", "ACM"}){
+    for(auto dev_name : {"USB"}){
+        for(int i = 0; i < 4; i++){
             QString port = QString("/dev/tty%1%2").arg(dev_name).arg(i);
-            DEBUG(port);
+            if(QFile::exists(port)){
+                existing_ports.append(port);
+            }
+        }
+    }
+
+    for(auto port: existing_ports){
+        DEBUG(port);
+        for(int attempt = 0; attempt < 2; attempt++){
+            DEBUG(attempt);
             QSerialPort s;
             s.setParity(QSerialPort::NoParity);
             s.setDataBits(QSerialPort::Data8);
@@ -289,10 +302,10 @@ frmMain::frmMain(QWidget *parent) :
             // Need to reset it first with Arduino IDE, next time want to be reseted.
             if(!s.isDataTerminalReady()){
                 s.setDataTerminalReady(1);
-                QThread::msleep(10);
+                QThread::msleep(100);
             }
             s.setDataTerminalReady(0);
-            QThread::msleep(10);
+            QThread::msleep(100);
             s.setDataTerminalReady(1);
 
             if(!s.waitForReadyRead(2000)){
@@ -307,15 +320,17 @@ frmMain::frmMain(QWidget *parent) :
                 DEBUG(line);
                 if(line == "Grbl 1.1f ['$' for help]") {
                     grblPort = port;
-                    DEBUG(grblPort);
-                    break;
+                    //DEBUG(grblPort);
+                    goto this_port_done;
                 }else if(line == "Candle Panel"){
                     panelPort = port;
-                    DEBUG(panelPort);
-                    break;
+                    //DEBUG(panelPort);
+                    goto this_port_done;
                 }
             }
         }
+this_port_done:
+        ;       
     }
     DEBUG(grblPort);
     DEBUG(panelPort);
