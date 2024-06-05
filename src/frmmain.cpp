@@ -277,6 +277,7 @@ frmMain::frmMain(QWidget *parent) :
             }
         }
     }
+    //TODO Test when ports does not exists and pop out message dialog to user.
 
     for(auto port: existing_ports){
         DEBUG(port);
@@ -300,6 +301,7 @@ frmMain::frmMain(QWidget *parent) :
             // FIXME This reset does not work robustly.
             // GRBL board does not want to be reseted if 12V power is not on.
             // Need to reset it first with Arduino IDE, next time want to be reseted.
+            // -O Maybe solved, problem that sometimes port does not exists.
             if(!s.isDataTerminalReady()){
                 s.setDataTerminalReady(1);
                 QThread::msleep(100);
