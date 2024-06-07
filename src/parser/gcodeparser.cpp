@@ -460,7 +460,6 @@ QList<QStringList> GcodeParser::preprocessCommand2(const QStringList &args) {
     if (gCodes.size() == 1){
         float code = gCodes.first();
         if (120.0f <= code && code <= 130.0f) {
-            DEBUG(code);
             QList<QStringList> progLines = getMacroInstrProgram(code);
             // Parse args to macro instr program.
             QMap<QChar, double> progArgsMapping;
@@ -473,20 +472,18 @@ QList<QStringList> GcodeParser::preprocessCommand2(const QStringList &args) {
                     progArgsMapping.insert(c, nv);
                 }
             }
-#if 1
+#if 0
             for(auto it = progArgsMapping.begin(); it != progArgsMapping.end(); it++){
                 qDebug() << it.key() << "=" << it.value();
             }
 #endif
             qDebug() << "after";
             for(auto& progLine: progLines){
-                DEBUG(progLine);
                 for(auto& a: progLine){
                     int hashIdx = a.indexOf('#');
                     if(hashIdx != -1){
                         QString beforeParam = a.left(hashIdx);
                         QChar paramName = a[hashIdx+1];
-                        DEBUG(paramName);
                         if(progArgsMapping.contains(paramName)){
                             a = beforeParam + QString::number(progArgsMapping[paramName]);
                         }else{
@@ -494,11 +491,9 @@ QList<QStringList> GcodeParser::preprocessCommand2(const QStringList &args) {
                         }
                     }
                 }
-                DEBUG(progLine);
             }
 
             argsList.append(progLines);
-            DEBUG(argsList);
         } else {
             argsList.append(args);
         }
