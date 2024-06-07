@@ -249,6 +249,7 @@ QString GcodePreprocessorUtils::generateG1FromPoints(QVector3D start, QVector3D 
 QStringList GcodePreprocessorUtils::splitCommand(const QString &command) {
     QStringList l;
     bool readNumeric = false;
+    bool readParam = false;
     QString sb;
 
     QByteArray ba(command.toLatin1());
@@ -258,7 +259,16 @@ QStringList GcodePreprocessorUtils::splitCommand(const QString &command) {
     for (int i = 0; i < command.length(); i++) {
         c = cmd[i];
 
-        if (readNumeric && !isDigit(c) && c != '.') {
+        if (c == '#') {
+            readParam = true;
+            sb.append(c);
+        } else if (readParam) {
+            readParam = false;
+            readNumeric = false;
+            sb.append(c);
+            l.append(sb);
+            sb.clear();
+        } else if (readNumeric && !isDigit(c) && c != '.') {
             readNumeric = false;
             l.append(sb);
             sb.clear();

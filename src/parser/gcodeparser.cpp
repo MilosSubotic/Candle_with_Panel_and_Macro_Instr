@@ -525,9 +525,10 @@ QList<QStringList> GcodeParser::getMacroInstrProgram(float code) {
                 // Read lines
                 while (!textStream.atEnd()) {
                     QString command = textStream.readLine();
-                    //TODO Someone remove #
+                    DEBUG(command);
                     QString stripped = GcodePreprocessorUtils::removeComment(command);
                     QStringList args = GcodePreprocessorUtils::splitCommand(stripped);
+                    DEBUG(args);
                     programLines.append(args);
                 }
             }
