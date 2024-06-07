@@ -462,7 +462,6 @@ QList<QStringList> GcodeParser::preprocessCommand2(const QStringList &args) {
         if (120.0f <= code && code <= 130.0f) {
             DEBUG(code);
             QList<QStringList> progLines = getMacroInstrProgram(code);
-            DEBUG(progLines);
             // Parse args to macro instr program.
             QMap<QChar, double> progArgsMapping;
             for(auto& a: args){
@@ -474,21 +473,22 @@ QList<QStringList> GcodeParser::preprocessCommand2(const QStringList &args) {
                     progArgsMapping.insert(c, nv);
                 }
             }
-#if 0
+#if 1
             for(auto it = progArgsMapping.begin(); it != progArgsMapping.end(); it++){
                 qDebug() << it.key() << "=" << it.value();
             }
 #endif
+            qDebug() << "after";
             for(auto& progLine: progLines){
+                DEBUG(progLine);
                 for(auto& a: progLine){
-                    if(a[1] == '#'){
-                        if(a.size() != 3){
-                            qWarning() << "Wrong usage of param:" << args;
-                        }
-                        QChar c = a[0];
-                        QChar paramName = a[2];
+                    int hashIdx = a.indexOf('#');
+                    if(hashIdx != -1){
+                        QString beforeParam = a.left(hashIdx);
+                        QChar paramName = a[hashIdx+1];
+                        DEBUG(paramName);
                         if(progArgsMapping.contains(paramName)){
-                            a = QString(c) + QString::number(progArgsMapping[paramName]);
+                            a = beforeParam + QString::number(progArgsMapping[paramName]);
                         }else{
                             qWarning() << "Lacking argument to instruction:" << args;
                         }
@@ -525,10 +525,8 @@ QList<QStringList> GcodeParser::getMacroInstrProgram(float code) {
                 // Read lines
                 while (!textStream.atEnd()) {
                     QString command = textStream.readLine();
-                    DEBUG(command);
                     QString stripped = GcodePreprocessorUtils::removeComment(command);
                     QStringList args = GcodePreprocessorUtils::splitCommand(stripped);
-                    DEBUG(args);
                     programLines.append(args);
                 }
             }
