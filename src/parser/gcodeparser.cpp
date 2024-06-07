@@ -459,20 +459,46 @@ QList<QStringList> GcodeParser::preprocessCommand2(const QStringList &args) {
 
     if (gCodes.size() == 1){
         float code = gCodes.first();
-        if (code == 120.0f) {
-            //TODO
-            QList<QStringList> programLines = getMacroInstrProgram(code);
-            DEBUG(programLines);
-            //TODO Parse args as in GcodePreprocessorUtils.
-            //TODO Replace args in programLines.
+        if (120.0f <= code && code <= 130.0f) {
+            DEBUG(code);
+            QList<QStringList> progLines = getMacroInstrProgram(code);
+            DEBUG(progLines);
+            // Parse args to macro instr program.
+            QMap<QChar, double> progArgsMapping;
+            for(auto& a: args){
+                QChar c = a[0];
+                //TODO something more to skip.
+                QString v = a.right(a.size()-1);
+                double nv = v.toDouble();
+                if(c != 'G'){
+                    progArgsMapping.insert(c, nv);
+                }
+            }
+#if 0
+            for(auto it = progArgsMapping.begin(); it != progArgsMapping.end(); it++){
+                qDebug() << it.key() << "=" << it.value();
+            }
+#endif
+            for(auto& progLine: progLines){
+                for(auto& a: progLine){
+                    if(a[1] == '#'){
+                        if(a.size() != 3){
+                            qWarning() << "Wrong usage of param:" << args;
+                        }
+                        QChar c = a[0];
+                        QChar paramName = a[2];
+                        if(progArgsMapping.contains(paramName)){
+                            a = QString(c) + QString::number(progArgsMapping[paramName]);
+                        }else{
+                            qWarning() << "Lacking argument to instruction:" << args;
+                        }
+                    }
+                }
+                DEBUG(progLine);
+            }
 
-            //TODO debug test.
-            QStringList args2;
-            args2.append("G0");
-            args2.append("X20");
-            args2.append("Y20");
-            argsList.append(args2);
-             DEBUG(argsList);
+            argsList.append(progLines);
+            DEBUG(argsList);
         } else {
             argsList.append(args);
         }
@@ -485,6 +511,7 @@ QList<QStringList> GcodeParser::preprocessCommand2(const QStringList &args) {
 
 QList<QStringList> GcodeParser::getMacroInstrProgram(float code) {
     //TODO Caching.
+    //TODO int and float codes
     QString programName = QString("macro_instrs/ProgramG%1.gc").arg(int(code));
     QString programFileName = QStandardPaths::locate(
         QStandardPaths::AppConfigLocation,
@@ -498,6 +525,7 @@ QList<QStringList> GcodeParser::getMacroInstrProgram(float code) {
                 // Read lines
                 while (!textStream.atEnd()) {
                     QString command = textStream.readLine();
+                    //TODO Someone remove #
                     QString stripped = GcodePreprocessorUtils::removeComment(command);
                     QStringList args = GcodePreprocessorUtils::splitCommand(stripped);
                     programLines.append(args);
