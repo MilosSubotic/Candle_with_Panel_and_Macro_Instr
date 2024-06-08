@@ -1888,6 +1888,7 @@ void frmMain::resetHeightmap()
 
 void frmMain::loadFile(QList<QString> data)
 {
+DEBUG(data);
     QTime time;
     time.start();
 
@@ -1932,7 +1933,6 @@ void frmMain::loadFile(QList<QString> data)
     QString stripped;
     QString trimmed;
     QList<QString> args;
-    GCodeItem item;
 
     // Prepare model
     m_programModel.data().clear();
@@ -1960,16 +1960,21 @@ void frmMain::loadFile(QList<QString> data)
 
 //            PointSegment *ps = gp.addCommand(args);
             gp.addCommand(args);
+            QList<QStringList> argsList = gp.getLastArgsList();
 
     //        if (ps && (qIsNaN(ps->point()->x()) || qIsNaN(ps->point()->y()) || qIsNaN(ps->point()->z())))
     //                   qDebug() << "nan point segment added:" << *ps->point();
 
-            item.command = trimmed;
-            item.state = GCodeItem::InQueue;
-            item.line = gp.getCommandNumber();
-            item.args = args;
-
-            m_programModel.data().append(item);
+            //TODO Command column to have args, and add another column with args2
+            foreach (const QStringList& args2, argsList) {
+                GCodeItem item;
+                //item.command = trimmed;
+                item.command = args2.join(' ');
+                item.state = GCodeItem::InQueue;
+                item.line = gp.getCommandNumber(); //FIXME this is wrong.
+                item.args = args2;
+                m_programModel.data().append(item);
+            }
         }
 
         if (progress.isVisible() && (data.count() % PROGRESSSTEP == 0)) {
@@ -2566,7 +2571,7 @@ void frmMain::updateParser()
         }
 
         // Add command to parser
-        gp.addCommand(args);
+        gp.addCommand(args); //TODO Handle argsList
 
         // Update table model
         m_currentModel->data()[i].state = GCodeItem::InQueue;

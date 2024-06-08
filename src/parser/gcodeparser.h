@@ -36,6 +36,7 @@ public:
     void reset(const QVector3D &initialPoint = QVector3D(qQNaN(), qQNaN(), qQNaN()));
     PointSegment *addCommand(QString command);
     PointSegment *addCommand(const QStringList &args);
+    QList<QStringList> getLastArgsList() { return m_lastArgsList; }
     QVector3D* getCurrentPoint();
     QList<PointSegment *> expandArc();
     QStringList preprocessCommands(QStringList commands);
@@ -85,6 +86,8 @@ private:
     PointSegment *addLinearPointSegment(const QVector3D &nextPoint, bool fastTraverse);
     PointSegment *addArcPointSegment(const QVector3D &nextPoint, bool clockwise, const QStringList &args);
     void setLastGcodeCommand(float num);
+
+    QList<QStringList> m_lastArgsList;
 };
 
 #endif // GCODEPARSER_H

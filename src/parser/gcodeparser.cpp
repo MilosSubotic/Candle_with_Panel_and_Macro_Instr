@@ -123,8 +123,8 @@ PointSegment* GcodeParser::addCommand(const QStringList &args)
     //return processCommand(args);
     
     PointSegment *ps = NULL;
-    QList<QStringList> argsList = preprocessCommand2(args);
-    foreach (const QStringList& args2, argsList) {
+    m_lastArgsList = preprocessCommand2(args);
+    foreach (const QStringList& args2, m_lastArgsList) {
         ps = processCommand(args2);
     }
     return ps;
@@ -456,7 +456,7 @@ QList<QStringList> GcodeParser::preprocessCommand2(const QStringList &args) {
 
     // handle G codes.
     QList<float> gCodes = GcodePreprocessorUtils::parseCodes(args, 'G');
-
+    
     if (gCodes.size() == 1){
         float code = gCodes.first();
         if (120.0f <= code && code <= 130.0f) {
@@ -477,7 +477,6 @@ QList<QStringList> GcodeParser::preprocessCommand2(const QStringList &args) {
                 qDebug() << it.key() << "=" << it.value();
             }
 #endif
-            qDebug() << "after";
             for(auto& progLine: progLines){
                 for(auto& a: progLine){
                     int hashIdx = a.indexOf('#');
