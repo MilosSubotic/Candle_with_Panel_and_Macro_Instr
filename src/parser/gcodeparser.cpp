@@ -118,6 +118,7 @@ PointSegment* GcodeParser::addCommand(QString command)
 PointSegment* GcodeParser::addCommand(const QStringList &args)
 {
     if (args.isEmpty()) {
+        m_lastArgsList.clear();
         return NULL;
     }
     //return processCommand(args);
