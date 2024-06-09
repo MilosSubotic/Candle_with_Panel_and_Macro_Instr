@@ -1888,7 +1888,6 @@ void frmMain::resetHeightmap()
 
 void frmMain::loadFile(QList<QString> data)
 {
-DEBUG(data);
     QTime time;
     time.start();
 
